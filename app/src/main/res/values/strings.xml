@@ -1,0 +1,12 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Learn X in Y Minutes</string>
+    <string name="title_activity_scrolling">e</string>
+    <string name="site_link">https://learnxinyminutes.com/</string>
+    <string name="about_app" tools:keep="@string/about_app">"This is an unofficial app for the popular site Learn X in Y minutes.\n\nIt allows for a quick refresh of your favorite language.\n\nIt is released under the CC BY-SA 30 license, same as what the authors' content is licensed by."</string>
+
+    <!--for the AboutLibraries builder-->
+    <string name="aboutLibraries_description_showIcon" tools:keep="@string/aboutLibraries_description_showIcon">true</string>
+    <string name="aboutLibraries_description_showVersion" tools:keep="@string/aboutLibraries_description_showVersion">true</string>
+    <string name="aboutLibraries_description_text" tools:keep="@string/aboutLibraries_description_text">@string/about_app</string>
+
+</resources>

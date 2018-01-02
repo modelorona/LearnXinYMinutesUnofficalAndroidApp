@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--menu for main activity-->
+    <string name="menu_about">About</string>
+    <string name="menu_visit">Visit the XinY site</string>
+</resources>
