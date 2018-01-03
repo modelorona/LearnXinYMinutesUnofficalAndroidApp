@@ -6,3 +6,5 @@ The XinY site is [here](https://learnxinyminutes.com/). Please do go visit it, i
 The sole purpose of this app was to learn more about Firebase (specifically the database feature, still is a bit strange) and more about Android (boy oh boy).
 
 My app can be found on the [Play Store](https://play.google.com/store/apps/details?id=com.ah.xiny3).
+
+Note: this repo is mirrored from a private repo that isn't uploaded due to reasons, so not all changes will be uploaded instantly.
