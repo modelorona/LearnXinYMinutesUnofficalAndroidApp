@@ -38,31 +38,37 @@ public class MainActivity extends AppCompatActivity {
     private Cache cache;
     private final String languageList = "languageList"; // where the list of languages gets stored locally
 
-    // todo: look into this in regards to cleaning up firebase code: https://stackoverflow.com/questions/39930671/android-how-to-access-the-same-object-through-different-activities
+    /**
+     *
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         languageView = findViewById(R.id.languageList);
-        cache = new Cache(getApplicationContext());
+        cache = new Cache(MainActivity.this);
 
 
         // check to see if list of languages is stored locally. if not, read in from database
         List<File> files = Arrays.asList(getCacheDir().listFiles());
         if (files.contains(new File(getCacheDir(), languageList))){
             List<String> cachedLanguageList = Arrays.asList(cache.readFromCache(languageList).split(System.lineSeparator()));
-            adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_expandable_list_item_1, cachedLanguageList);
+            adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_expandable_list_item_1, cachedLanguageList);
             languageView.setAdapter(adapter);
         }
         else {
             FirebaseAuth auth = FirebaseAuth.getInstance();
             auth.signInAnonymously().addOnCompleteListener(this, task -> {
                 if (task.isSuccessful()) {
-                    // todo: need to get the offline list of languages lolz
                     db = FirebaseDatabase.getInstance();
                     DatabaseReference dbref = db.getReference();
                     languages = new ArrayList<>();
                     dbref.addListenerForSingleValueEvent(new ValueEventListener() {
+                        /**
+                         *
+                         * @param dataSnapshot
+                         */
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             // time to get the list of all languages
@@ -84,6 +90,10 @@ public class MainActivity extends AppCompatActivity {
                             AsyncTask.execute(cacheLangaugeList);
                         }
 
+                        /**
+                         *
+                         * @param databaseError
+                         */
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
                             SimpleAlert.displayWithOK(MainActivity.this, "An error has occured with the database read.", "Error Occurred");
@@ -91,6 +101,10 @@ public class MainActivity extends AppCompatActivity {
                     });
 
                     dbref.addValueEventListener(new ValueEventListener() {
+                        /**
+                         *
+                         * @param dataSnapshot
+                         */
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             // whenever timestamp changes, update it in preferences
@@ -105,6 +119,10 @@ public class MainActivity extends AppCompatActivity {
                             AsyncTask.execute(saveToPreference);
                         }
 
+                        /**
+                         *
+                         * @param databaseError
+                         */
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
                             // what to do
@@ -116,7 +134,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
         languageView.setOnItemClickListener((parent, view, position, id) -> {
             // start the new activity, which will show the language
             Intent intent = new Intent(getBaseContext(), ScrollingActivity.class);
@@ -125,10 +142,13 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtras(extras);
             startActivity(intent);
         });
-
     }
 
-
+    /**
+     *
+     * @param menu
+     * @return
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
@@ -137,19 +157,27 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     *
+     */
     @Override
     public void onDestroy(){
         FirebaseAuth.getInstance().signOut();
-        deleteFile(languageList); // clear the language cache on destroy. this allows for updating on start todo: see how to implement this as a weekly job
+//        deleteFile(languageList); // commented out because this destroys offline access if app is started
         FirebaseDatabase.getInstance().goOffline();
         super.onDestroy();
     }
 
+    /**
+     *
+     * @param item
+     * @return
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.about:
-                new LibsBuilder().withActivityTitle("About this app").withActivityTheme(R.style.AppTheme_NoActionBar).withActivityStyle(Libs.ActivityStyle.DARK).withFields(R.string.class.getFields()).start(getApplicationContext());
+                new LibsBuilder().withActivityTitle("About this app").withActivityTheme(R.style.AppTheme_NoActionBar).withActivityStyle(Libs.ActivityStyle.DARK).withFields(R.string.class.getFields()).start(MainActivity.this);
                 break;
             case R.id.visit:
                 Uri page = Uri.parse(getResources().getString(R.string.site_link));
