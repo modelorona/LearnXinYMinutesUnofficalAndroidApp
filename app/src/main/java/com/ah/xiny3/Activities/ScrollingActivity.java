@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 import android.webkit.WebView;
 
 import com.ah.xiny3.Dialogs.SimpleAlert;
@@ -34,8 +35,8 @@ public class ScrollingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_scrolling);
         final Intent intent = getIntent(); // key is XINY_LANG_NAME
         final String languageToGet = intent.getStringExtra("XINY_LANG_NAME");
-        cache = new Cache(getApplicationContext());
-        final DatabaseReference dbref = FirebaseDatabase.getInstance().getReference();
+        cache = new Cache(ScrollingActivity.this);
+        final DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("languages").child(languageToGet);
         settings = getSharedPreferences("com.ah.xiny.preferences", Context.MODE_PRIVATE);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -47,7 +48,7 @@ public class ScrollingActivity extends AppCompatActivity {
 
         contentView = findViewById(R.id.contentView);
         contentView.setInitialScale(200);
-        // todo: look into having a progress bar or loading bar while this shit does its job #gang
+
         List<File> files = Arrays.asList(getCacheDir().listFiles());
         if (files.contains(new File(getCacheDir(), languageToGet)) && settings.contains("com.ah.xiny." + languageToGet + "timestamp")) { // read from cache if file already exists
             long languageToGetTimestamp = settings.getLong("com.ah.xiny." + languageToGet + "timestamp", 0L); // should never use default value
@@ -67,7 +68,7 @@ public class ScrollingActivity extends AppCompatActivity {
             } else { // there was no change, use local cache
                 String html = cache.readFromCache(languageToGet);
                 if (html.equals("fail")) // could not read language from cache
-                    SimpleAlert.displayWithOK(getApplicationContext(), "The content for " + languageToGet + " cannot be read from the database.\n\nPlease check to see if your internet connection or mobile data are turned on.", "Error showing language content");
+                    SimpleAlert.displayWithOK(ScrollingActivity.this, "The content for " + languageToGet + " cannot be read from the database.\n\nPlease check to see if your internet connection or mobile data are turned on.", "Error showing language content");
                 else
                     contentView.loadDataWithBaseURL("", html, "text/html", "UTF-8", "");
             }
@@ -81,7 +82,7 @@ public class ScrollingActivity extends AppCompatActivity {
 
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
-                    SimpleAlert.displayWithOK(getApplicationContext(), "The content for " + languageToGet + " cannot be read from the database.\n\nPlease check to see if your internet connection or mobile data are turned on.", "Error showing language content");
+                    SimpleAlert.displayWithOK(ScrollingActivity.this, "The content for " + languageToGet + " cannot be read from the database.\n\nPlease check to see if your internet connection or mobile data are turned on.", "Error showing language content");
                 }
             });
         }
@@ -89,13 +90,14 @@ public class ScrollingActivity extends AppCompatActivity {
     }
 
     private void updateWebview(DataSnapshot dataSnapshot, String languageToGet) {
-        DataSnapshot child = dataSnapshot.child("languages").child(languageToGet).child("html");
+        DataSnapshot child = dataSnapshot.child("html");
         //noinspection ConstantConditions
         contentView.loadDataWithBaseURL("", child.getValue().toString(), "text/html", "UTF-8", "");
         cache.writeToCache(languageToGet, child.getValue().toString().getBytes()); // cache the html content
         SharedPreferences.Editor editor = settings.edit();
         editor.putLong("com.ah.xiny." + languageToGet + "timestamp", System.currentTimeMillis() / 1000); // languagetimestamp save
         editor.apply();
+        findViewById(R.id.progressBar_cyclic).setVisibility(View.GONE); // hide the loading bar when data is displayed even though webview goes on top of it. no need to have extra stuff happening
     }
 
 }
