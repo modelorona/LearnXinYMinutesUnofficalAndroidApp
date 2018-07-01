@@ -1,16 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_search_white_24dp"
+        android:orderInCategory="100"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/about"
-        android:orderInCategory="100"
+        android:orderInCategory="200"
         android:title="@string/menu_about" />
 
     <item
         android:id="@+id/visit"
-        android:orderInCategory="200"
+        android:orderInCategory="300"
         android:title="@string/menu_visit"
         />
+
+    <!--<item-->
+        <!--android:id="@+id/feature"-->
+        <!--android:orderInCategory="400"-->
+        <!--android:title="@string/feature"-->
+        <!--/>-->
 
 </menu>

@@ -2,7 +2,9 @@
     <string name="app_name">Learn X in Y Minutes</string>
     <string name="title_activity_scrolling">e</string>
     <string name="site_link">https://learnxinyminutes.com/</string>
-    <string name="about_app" tools:keep="@string/about_app">"This is an unofficial app for the popular site Learn X in Y minutes.\n\nIt allows for a quick refresh of your favorite language.\n\nIt is released under the CC BY-SA 30 license, same as what the authors' content is licensed by."</string>
+    <string name="search_hint">Search For Language</string>
+    <string name="feature">Request A Feature</string>
+    <string name="about_app" tools:keep="@string/about_app">"This is an unofficial app for the popular site Learn X in Y minutes.\n\nIt allows for a quick refresh of your favorite language.\n\nIt is released under the CC BY-SA 30 license, same as what the authors' content is licensed by.\n\nThe app has crash reporting as well as analytics that are provided by Google Firebase services. This data is strictly for to make sure that any crashes are caught and fixed and to gauge the user interaction.\n\nIt is not sold to anyone or exposed to anyone."</string>
 
     <!--for the AboutLibraries builder-->
     <string name="aboutLibraries_description_showIcon" tools:keep="@string/aboutLibraries_description_showIcon">true</string>

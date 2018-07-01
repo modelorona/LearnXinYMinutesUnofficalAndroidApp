@@ -1,139 +1,81 @@
 package com.ah.xiny3.Activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 
-import com.ah.xiny3.Dialogs.SimpleAlert;
 import com.ah.xiny3.R;
-import com.ah.xiny3.Util.Cache;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.github.florent37.materialtextfield.MaterialTextField;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.mikepenz.aboutlibraries.Libs;
 import com.mikepenz.aboutlibraries.LibsBuilder;
+import com.google.android.gms.ads.MobileAds;
 
-import java.io.File;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
-    private FirebaseDatabase db;
-    private ListView languageView;
-    private ArrayList<String> languages;
-    private ArrayAdapter<String> adapter;
-    private Cache cache;
-    private final String languageList = "languageList"; // where the list of languages gets stored locally
+    // ca-app-pub-3276395982865954~8864018841 is app id
+    // ca-app-pub-3276395982865954/7523442048 is banner id
+    // ca-app-pub-3940256099942544/6300978111 is test ad
+    // ca-app-pub-3940256099942544~3347511713 is test sdk id
 
-    /**
-     *
-     * @param savedInstanceState
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        languageView = findViewById(R.id.languageList);
-        cache = new Cache(MainActivity.this);
 
+        MobileAds.initialize(this, "ca-app-pub-3940256099942544~3347511713");
+        AdView mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
 
-        // check to see if list of languages is stored locally. if not, read in from database
-        List<File> files = Arrays.asList(getCacheDir().listFiles());
-        if (files.contains(new File(getCacheDir(), languageList))){
-            List<String> cachedLanguageList = Arrays.asList(cache.readFromCache(languageList).split(System.lineSeparator()));
-            adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_expandable_list_item_1, cachedLanguageList);
-            languageView.setAdapter(adapter);
-        }
-        else {
-            FirebaseAuth auth = FirebaseAuth.getInstance();
-            auth.signInAnonymously().addOnCompleteListener(this, task -> {
-                if (task.isSuccessful()) {
-                    db = FirebaseDatabase.getInstance();
-                    DatabaseReference dbref = db.getReference();
-                    languages = new ArrayList<>();
-                    dbref.addListenerForSingleValueEvent(new ValueEventListener() {
-                        /**
-                         *
-                         * @param dataSnapshot
-                         */
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            // time to get the list of all languages
-                            for (DataSnapshot child : dataSnapshot.child("languages").getChildren()) {
-                                String name = child.getKey();
-                                languages.add(name);
-                            }
-                            adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_expandable_list_item_1, languages);
-                            languageView.setAdapter(adapter); // set the languages in the listview
-                            // save the languages to the cache
-                            Runnable cacheLangaugeList = () -> {
-                                //noinspection StringBufferMayBeStringBuilder
-                                StringBuffer buffer = new StringBuffer();
-                                for (String l: languages){
-                                    buffer.append(l).append(System.lineSeparator());
-                                }
-                                cache.writeToCache(languageList, buffer.toString().getBytes());
-                            };
-                            AsyncTask.execute(cacheLangaugeList);
-                        }
+        ListView languageView = findViewById(R.id.languageList);
+        ArrayList<String> languages = new ArrayList<>();
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_expandable_list_item_1, languages);
 
-                        /**
-                         *
-                         * @param databaseError
-                         */
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            SimpleAlert.displayWithOK(MainActivity.this, "An error has occured with the database read.", "Error Occurred");
-                        }
-                    });
+        EditText langSearch = findViewById(R.id.search_bar_inner);
 
-                    dbref.addValueEventListener(new ValueEventListener() {
-                        /**
-                         *
-                         * @param dataSnapshot
-                         */
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            // whenever timestamp changes, update it in preferences
-                            // get last edit timestamp and store it in preferences via background task
-                            SharedPreferences settings = getSharedPreferences("com.ah.xiny.preferences", 0);
-                            Runnable saveToPreference = () -> {
-                                @SuppressWarnings("ConstantConditions") long timestamp = Long.parseLong(dataSnapshot.child("last_edit_timestamp").getValue().toString());
-                                SharedPreferences.Editor editor = settings.edit();
-                                editor.putLong("com.ah.xiny.last_edit_timestamp", timestamp);
-                                editor.apply();
-                            };
-                            AsyncTask.execute(saveToPreference);
-                        }
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder().setTimestampsInSnapshotsEnabled(true).setPersistenceEnabled(true).build();
+        db.setFirestoreSettings(settings);
 
-                        /**
-                         *
-                         * @param databaseError
-                         */
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            // what to do
-                        }
-                    });
+        CollectionReference lang_ref = db.collection("languages");
 
-                } else {
-                    SimpleAlert.displayWithOK(MainActivity.this, "An error has occured with the database sign in.", "Error Occurred");
+        lang_ref.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (QueryDocumentSnapshot doc: task.getResult()){
+                    if (doc.exists()) {
+                        languages.add(doc.get("language").toString());
+                    }
                 }
-            });
-        }
+                Collections.sort(languages);
+                languageView.setAdapter(adapter); // set the languages in the listview
+                findViewById(R.id.main_progress).setVisibility(View.GONE);
+                languageView.setVisibility(View.VISIBLE);
+            } else {
+                Log.d("XINY TASK ERROR", task.getException().toString());
+            }
+        });
+
         languageView.setOnItemClickListener((parent, view, position, id) -> {
             // start the new activity, which will show the language
             Intent intent = new Intent(getBaseContext(), ScrollingActivity.class);
@@ -142,13 +84,25 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtras(extras);
             startActivity(intent);
         });
+
+        langSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.getFilter().filter(s);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
     }
 
-    /**
-     *
-     * @param menu
-     * @return
-     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
@@ -157,22 +111,6 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    /**
-     *
-     */
-    @Override
-    public void onDestroy(){
-        FirebaseAuth.getInstance().signOut();
-//        deleteFile(languageList); // commented out because this destroys offline access if app is started
-        FirebaseDatabase.getInstance().goOffline();
-        super.onDestroy();
-    }
-
-    /**
-     *
-     * @param item
-     * @return
-     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -183,6 +121,16 @@ public class MainActivity extends AppCompatActivity {
                 Uri page = Uri.parse(getResources().getString(R.string.site_link));
                 Intent visitIntent = new Intent(Intent.ACTION_VIEW, page);
                 startActivity(visitIntent);
+                break;
+            case R.id.action_search:
+                MaterialTextField f = findViewById(R.id.search_bar);
+                // hide the bar if it is visible
+                if (f.getVisibility() == View.VISIBLE) {
+                    f.setVisibility(View.GONE);
+                } else {
+                    f.setVisibility(View.VISIBLE);
+                    f.setHasFocus(true);
+                }
                 break;
         }
         return true;

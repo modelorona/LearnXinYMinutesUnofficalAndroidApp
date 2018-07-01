@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--suppress CheckTagEmptyBody -->
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -6,28 +7,92 @@
     android:layout_height="match_parent"
     tools:context="com.ah.xiny3.Activities.MainActivity">
 
-    <ListView
-        android:id="@+id/languageList"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="0dp"
-        android:layout_marginEnd="0dp"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="0dp"
-        android:alwaysDrawnWithCache="false"
-        android:animationCache="false"
-        android:clickable="true"
-        android:divider="@color/colorPrimary"
-        android:fadeScrollbars="true"
-        android:focusable="true"
-        android:headerDividersEnabled="true"
-        android:scrollbars="vertical"
-        android:scrollingCache="false"
+        android:orientation="vertical">
+
+        <com.github.florent37.materialtextfield.MaterialTextField
+            android:id="@+id/search_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:mtf_image="@drawable/ic_search_black_24dp"
+            app:mtf_labelColor="@color/browser_actions_text_color"
+            app:mtf_openKeyboardOnFocus="true">
+
+            <EditText
+                android:id="@+id/search_bar_inner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:textColor="#000"
+                android:hint="@string/search_hint"
+                android:inputType="text"
+                android:textAlignment="viewStart"
+                android:visibility="visible" />
+        </com.github.florent37.materialtextfield.MaterialTextField>
+
+        <ListView
+            android:id="@+id/languageList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="8dp"
+            android:layout_weight="1"
+            android:alwaysDrawnWithCache="false"
+            android:animationCache="false"
+            android:clickable="true"
+            android:divider="@color/colorPrimary"
+            android:fadeScrollbars="true"
+            android:focusable="true"
+            android:headerDividersEnabled="true"
+            android:scrollbars="vertical"
+            android:scrollingCache="false"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0">
+
+        </ListView>
+        <com.google.android.gms.ads.AdView
+            android:id="@+id/adView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_weight="0"
+            app:adSize="BANNER"
+            app:adUnitId="ca-app-pub-3940256099942544/6300978111"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.493"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/languageList"
+            app:layout_constraintVertical_bias="1.0"></com.google.android.gms.ads.AdView>
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/main_progress"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="276dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:indeterminate="true"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-    </ListView>
+        app:layout_constraintVertical_bias="1.0" />
 
 </android.support.constraint.ConstraintLayout>
+

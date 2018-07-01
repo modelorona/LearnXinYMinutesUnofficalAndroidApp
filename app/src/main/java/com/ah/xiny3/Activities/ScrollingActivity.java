@@ -1,33 +1,20 @@
 package com.ah.xiny3.Activities;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.webkit.WebView;
 
-import com.ah.xiny3.Dialogs.SimpleAlert;
 import com.ah.xiny3.R;
-import com.ah.xiny3.Util.Cache;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 
 public class ScrollingActivity extends AppCompatActivity {
-
-    private WebView contentView;
-    private Cache cache;
-    private SharedPreferences settings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,13 +22,10 @@ public class ScrollingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_scrolling);
         final Intent intent = getIntent(); // key is XINY_LANG_NAME
         final String languageToGet = intent.getStringExtra("XINY_LANG_NAME");
-        cache = new Cache(ScrollingActivity.this);
-        final DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("languages").child(languageToGet);
-        settings = getSharedPreferences("com.ah.xiny.preferences", Context.MODE_PRIVATE);
+        WebView contentView;
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("X=" + languageToGet);
-
         setSupportActionBar(toolbar);
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -49,55 +33,21 @@ public class ScrollingActivity extends AppCompatActivity {
         contentView = findViewById(R.id.contentView);
         contentView.setInitialScale(200);
 
-        List<File> files = Arrays.asList(getCacheDir().listFiles());
-        if (files.contains(new File(getCacheDir(), languageToGet)) && settings.contains("com.ah.xiny." + languageToGet + "timestamp")) { // read from cache if file already exists
-            long languageToGetTimestamp = settings.getLong("com.ah.xiny." + languageToGet + "timestamp", 0L); // should never use default value
-            long firebaseTimestamp = settings.getLong("com.ah.xiny.last_edit_timestamp", 0L); // should never have a default, only put because it's not optional
-            if (firebaseTimestamp > languageToGetTimestamp) { // if the timestamp on the database is larger than the one saved, then that means the data on device is outdated
-                dbref.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        updateWebview(dataSnapshot, languageToGet);
-                    }
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder().setTimestampsInSnapshotsEnabled(true).setPersistenceEnabled(true).build();
+        db.setFirestoreSettings(settings);
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        // nothing to do
-                    }
-                });
-            } else { // there was no change, use local cache
-                String html = cache.readFromCache(languageToGet);
-                if (html.equals("fail")) // could not read language from cache
-                    SimpleAlert.displayWithOK(ScrollingActivity.this, "The content for " + languageToGet + " cannot be read from the database.\n\nPlease check to see if your internet connection or mobile data are turned on.", "Error showing language content");
-                else
-                    contentView.loadDataWithBaseURL("", html, "text/html", "UTF-8", "");
+        CollectionReference lang_ref = db.collection("languages");
+
+        lang_ref.whereEqualTo("language", languageToGet).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                // should always only be one that matches the language. if not, we have a problem
+                for (QueryDocumentSnapshot doc : task.getResult()) {
+                    contentView.loadData(doc.get("html").toString(), "text/html", null);
+                    findViewById(R.id.progressBar_cyclic).setVisibility(View.GONE);
+                }
             }
-
-        } else {
-            dbref.addListenerForSingleValueEvent(new ValueEventListener() { // read from database and then write it to cache
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    updateWebview(dataSnapshot, languageToGet);
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    SimpleAlert.displayWithOK(ScrollingActivity.this, "The content for " + languageToGet + " cannot be read from the database.\n\nPlease check to see if your internet connection or mobile data are turned on.", "Error showing language content");
-                }
-            });
-        }
-
-    }
-
-    private void updateWebview(DataSnapshot dataSnapshot, String languageToGet) {
-        DataSnapshot child = dataSnapshot.child("html");
-        //noinspection ConstantConditions
-        contentView.loadDataWithBaseURL("", child.getValue().toString(), "text/html", "UTF-8", "");
-        cache.writeToCache(languageToGet, child.getValue().toString().getBytes()); // cache the html content
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putLong("com.ah.xiny." + languageToGet + "timestamp", System.currentTimeMillis() / 1000); // languagetimestamp save
-        editor.apply();
-        findViewById(R.id.progressBar_cyclic).setVisibility(View.GONE); // hide the loading bar when data is displayed even though webview goes on top of it. no need to have extra stuff happening
+        });
     }
 
 }
