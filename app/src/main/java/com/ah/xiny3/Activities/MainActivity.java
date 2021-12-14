@@ -17,15 +17,12 @@ import android.widget.ListView;
 
 import com.ah.xiny3.R;
 import com.github.florent37.materialtextfield.MaterialTextField;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.mikepenz.aboutlibraries.Libs;
 import com.mikepenz.aboutlibraries.LibsBuilder;
-import com.google.android.gms.ads.MobileAds;
 
 
 import java.util.ArrayList;
@@ -33,20 +30,10 @@ import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
-    // ca-app-pub-3276395982865954~8864018841 is app id
-    // ca-app-pub-3276395982865954/7523442048 is banner id
-    // ca-app-pub-3940256099942544/6300978111 is test ad
-    // ca-app-pub-3940256099942544~3347511713 is test sdk id
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        MobileAds.initialize(this, "ca-app-pub-3940256099942544~3347511713");
-        AdView mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
 
         ListView languageView = findViewById(R.id.languageList);
         ArrayList<String> languages = new ArrayList<>();
@@ -55,14 +42,14 @@ public class MainActivity extends AppCompatActivity {
         EditText langSearch = findViewById(R.id.search_bar_inner);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder().setTimestampsInSnapshotsEnabled(true).setPersistenceEnabled(true).build();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder().setPersistenceEnabled(true).build();
         db.setFirestoreSettings(settings);
 
         CollectionReference lang_ref = db.collection("languages");
 
         lang_ref.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                for (QueryDocumentSnapshot doc: task.getResult()){
+                for (QueryDocumentSnapshot doc : task.getResult()) {
                     if (doc.exists()) {
                         languages.add(doc.get("language").toString());
                     }

@@ -34,7 +34,7 @@ public class ScrollingActivity extends AppCompatActivity {
         contentView.setInitialScale(200);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder().setTimestampsInSnapshotsEnabled(true).setPersistenceEnabled(true).build();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder().setPersistenceEnabled(true).build();
         db.setFirestoreSettings(settings);
 
         CollectionReference lang_ref = db.collection("languages");
